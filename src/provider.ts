@@ -61,3 +61,43 @@ async function helloGemini(): Promise<HelloOutput> {
     message: String(text).trim(),
   };
 }
+
+type OpenAiChatCompletion = {
+  choice?: Array<{message? :{content? :string}}>
+}
+
+  async function helloGroq():Promise<HelloOutput> {
+ const apikey = process.env.GROQ_API_KEY;
+
+  if (!apikey) throw new Error("Google API key is not present");
+
+  const model = 'llama-3.1-8b-instant';
+  const url = `https://api.openai.com/v1/chat/completions`
+  const response = await fetch(url, {
+    method :'POST',
+    headers :{
+      'Content-Type':'application/json',
+      Authorization :`Bearer ${apikey}`
+    },
+    body : JSON.stringify({
+      model,
+      message :[{
+        role :'user',
+        content:'Say a short hello'
+      }],
+      temperature: 0
+    })
+  })
+    if (!response.ok) {
+    throw new Error(`Gorq ${response.status}: ${await response.text()}`);
+  }
+
+  const json = (await response.json()) as OpenAiChatCompletion;
+  const content = json?.choice?.[0]?.message?.content ?? 'Hello as default'
+    return {
+    ok: true,
+    provider: 'gemini',
+    model,
+    message: String(content).trim(),
+  };
+}
